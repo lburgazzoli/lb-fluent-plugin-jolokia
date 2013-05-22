@@ -4,7 +4,7 @@ $:.push File.expand_path('../lib', __FILE__)
 Gem::Specification.new do |gem|
   gem.name        = "fluent-plugin-jolokia"
   gem.description = "Jolokia plugin for Fluent event collector"
-  gem.homepage    = "https://github.com/lburgazzoli/lb-fluent-plugins/fluent-plugin-jolokia"
+  gem.homepage    = "https://github.com/lburgazzoli/lb-fluent-plugin-jolokia"
   gem.summary     = gem.description
   gem.version     = File.read("VERSION").strip
   gem.authors     = ["Luca Burgazzoli"]
