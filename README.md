@@ -1,2 +1,4 @@
-lb-fluent-plugin-jolokia
-========================
+
+Requires:
+  - jolokia
+
