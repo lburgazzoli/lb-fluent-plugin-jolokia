@@ -25,9 +25,10 @@ module Fluent
     config_param :tag, :string, :default => nil
     config_param :jolokia_url, :string
     config_param :jmx_bean, :string
-    config_param :jmx_attribute, :string
+    config_param :jmx_attribute, :string, :default => nil
     config_param :jmx_path, :string, :default => nil
     config_param :run_interval, :time
+    config_param :add_jolokia_url, :bool, :default => false
 
     def initialize
       super
@@ -62,23 +63,26 @@ module Fluent
     def run_periodic
       until @finished
         sleep @run_interval
-        
-        tag = @tag
-      
+
+        tag         = @tag
+        value       = get_attribute(@jmx_bean, @jmx_attribute, @jmx_path)
+        value[:url] = @jolokia_url if @add_jolokia_url
+
         Engine.emit(
           tag, 
           Engine.now.to_i,
-          get_attribute(@jmx_bean,@jmx_attribute,@jmx_path)
+          value
         )
         
       end
     end  
 
-    def get_attribute(mbean, attribute, path = nil)
-      opt         = { :type => 'read' , :mbean => mbean, :attribute => attribute }
-      opt[:path]  = path if path
+    def get_attribute(mbean, attribute = nil, path = nil)
+      opt             = { :type => 'read', :mbean => mbean }
+      opt[:attribute] = attribute if attribute
+      opt[:path]      = path if path
 
-      resp = HTTParty.post(@jolokia_url,:body => JSON.generate(opt))
+      resp = HTTParty.post(@jolokia_url, :body => JSON.generate(opt))
       data = JSON.parse(resp.body)
 
       if data
