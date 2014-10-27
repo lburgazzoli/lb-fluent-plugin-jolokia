@@ -24,6 +24,7 @@ module Fluent
 
     config_param :tag, :string, :default => nil
     config_param :jolokia_url, :string
+    config_param :jolokia_auth, :string, :default => nil
     config_param :jmx_bean, :string
     config_param :jmx_attribute, :string, :default => nil
     config_param :jmx_path, :string, :default => nil
@@ -41,6 +42,7 @@ module Fluent
     def start
       @finished = false
       @thread = Thread.new(&method(:run_periodic))
+      @username, @password = @jolokia_auth.split(':') if @jolokia_auth
     end
 
     def shutdown
@@ -82,7 +84,13 @@ module Fluent
       opt[:attribute] = attribute if attribute
       opt[:path]      = path if path
 
-      resp = HTTParty.post(@jolokia_url, :body => JSON.generate(opt))
+      post_data = { :body => JSON.generate(opt) }
+      if @username and @password
+        auth = {:username => @username, :password => @password}
+        post_data[:basic_auth] = auth
+      end
+
+      resp = HTTParty.post(@jolokia_url, post_data)
       data = JSON.parse(resp.body)
 
       if data
