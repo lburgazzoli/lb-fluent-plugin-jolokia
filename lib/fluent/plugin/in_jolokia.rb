@@ -46,17 +46,8 @@ module Fluent
     end
 
     def shutdown
-      if @run_interval
-        @finished = true
-        @thread.join
-      else
-        Process.kill(:TERM, @pid)
-        if @thread.join(60)
-          return
-        end
-        Process.kill(:KILL, @pid)
-        @thread.join
-      end
+      @finished = true
+      @thread.join
     end
 
     # 
