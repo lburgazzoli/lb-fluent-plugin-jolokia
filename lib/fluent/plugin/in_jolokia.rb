@@ -57,15 +57,19 @@ module Fluent
       until @finished
         sleep @run_interval
 
-        tag         = @tag
-        value       = get_attribute(@jmx_bean, @jmx_attribute, @jmx_path)
-        value[:url] = @jolokia_url if @add_jolokia_url
+        begin 
+          tag         = @tag
+          value       = get_attribute(@jmx_bean, @jmx_attribute, @jmx_path)
+          value[:url] = @jolokia_url if @add_jolokia_url
 
-        Engine.emit(
-          tag, 
-          Engine.now.to_i,
-          value
-        )
+          Engine.emit(
+            tag, 
+            Engine.now.to_i,
+            value
+          )
+        rescue => e
+          $log.warn "Failed to get JMX attribute, but ignored: #{e.message}"
+        end
         
       end
     end  
