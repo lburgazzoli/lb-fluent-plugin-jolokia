@@ -31,6 +31,7 @@ module Fluent
     config_param :jmx_path, :string, :default => nil
     config_param :run_interval, :time
     config_param :add_jolokia_url, :bool, :default => false
+    config_param :extract_values_only, :bool, :default => false
 
     def initialize
       super
@@ -91,7 +92,11 @@ module Fluent
       resp = HTTParty.post(@jolokia_url, post_data)
       data = JSON.parse(resp.body)
       if data
-        return data
+        if @extract_values_only
+          return data["value"]
+        else
+          return data
+        end
       end
 
       return nil
