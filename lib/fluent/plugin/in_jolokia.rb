@@ -14,6 +14,7 @@
 #  limitations under the License.
 #
 
+require 'fluent/input'
 require 'httparty'
 require 'json'
 
@@ -30,6 +31,7 @@ module Fluent
     config_param :jmx_path, :string, :default => nil
     config_param :run_interval, :time
     config_param :add_jolokia_url, :bool, :default => false
+    config_param :extract_values_only, :bool, :default => false
 
     def initialize
       super
@@ -40,6 +42,7 @@ module Fluent
     end
       
     def start
+      super
       @finished = false
       @thread = Thread.new(&method(:run_periodic))
       @username, @password = @jolokia_auth.split(':') if @jolokia_auth
@@ -48,6 +51,7 @@ module Fluent
     def shutdown
       @finished = true
       @thread.join
+      super
     end
 
     # 
@@ -62,7 +66,7 @@ module Fluent
           value       = get_attribute(@jmx_bean, @jmx_attribute, @jmx_path)
           value[:url] = @jolokia_url if @add_jolokia_url
 
-          Engine.emit(
+          router.emit(
             tag, 
             Engine.now.to_i,
             value
@@ -87,9 +91,12 @@ module Fluent
 
       resp = HTTParty.post(@jolokia_url, post_data)
       data = JSON.parse(resp.body)
-
       if data
-        return data
+        if @extract_values_only
+          return data["value"]
+        else
+          return data
+        end
       end
 
       return nil
